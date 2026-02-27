@@ -44,7 +44,7 @@ Goal: Internal operational excellence and transparency.
 Security: Anonymized data for public deployment.
 
 🚀 How to Use (Template)
-Clone the repository: git clone https://github.com/enoGuarana/soberana.git
+Clone the repository: git clone https://github.com/enoGuarana/projectMonitor27
 
 Install dependencies: npm install (or your specific package manager).
 
