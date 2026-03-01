@@ -1,53 +1,35 @@
-🚀 Soberana - Internal Project Monitor
-Soberana is a centralized project management dashboard designed to eliminate "blind spots" in internal workflows. It was developed to solve a critical demand for transparency, allowing managers to track project progress in real-time and identify team availability for new allocations.
+# 📊 CGDIN - Monitor Geral de Projetos
 
-The project has been fully anonymized for public demonstration on GitHub while maintaining its core operational logic.
+![Status](https://img.shields.io/badge/Status-Operacional-success?style=for-the-badge)
+![Tech](https://img.shields.io/badge/Stack-Vanilla_JS_|_CSS3_|_HTML5-blue?style=for-the-badge)
 
-💡 The Problem & The Solution
-In many internal environments, managers struggle with:
+O **CGDIN Monitor** é uma plataforma executiva e operacional de alto desempenho projetada para a gestão de projetos estratégicos. O sistema utiliza uma arquitetura de dados onde o progresso dos projetos é calculado dinamicamente com base na execução de tarefas internas.
 
-Lack of Progress Visibility: No clear view of how close a project is to completion.
 
-Allocation Uncertainty: Difficulty identifying who is busy and who is available for new tasks.
 
-Fragmented Information: Data scattered across different tools or spreadsheets.
+## 🚀 Funcionalidades Principais
 
-Soberana solves this by providing a "Single Source of Truth," aggregating squad performance and project health into one dark-themed, intuitive interface.
+O sistema é dividido em 5 visões integradas:
 
-✨ Key Features
-Based on the dashboard interface:
+1.  **Visão Executiva (Dashboard):** Painel de alto nível que exibe o progresso percentual real de cada projeto, calculado pela relação `Tasks Concluídas / Total de Tasks`.
+2.  **Monitor Operacional:** Gestão detalhada de tarefas internas. Permite a criação de micro-entregas, atribuição de responsáveis e controle de status.
+3.  **Carga de Trabalho:** Analisa a distribuição de tarefas entre os integrantes, sinalizando sobrecarga em membros com mais de 3 tarefas pendentes.
+4.  **Quadro Kanban:** Visualização clássica de fluxo de trabalho (Pendente, Em Execução, Concluído) para agilidade no dia a dia.
+5.  **Linha do Tempo (Gantt de Ocupação):** Cronograma de 12 semanas que exibe visualmente quando cada integrante está ocupado com uma tarefa específica.
 
-Project Monitor (Main Dashboard): A high-level view of all active projects with progress percentages and completion status (In Progress, Planning, Completed).
+## 🛠️ Tecnologias Utilizadas
 
-Workload Management (Carga de Trabalho): Specifically designed to show team capacity and streamline resource allocation.
+* **Frontend:** HTML5 Semântico, CSS3 (Variáveis e Flexbox/Grid).
+* **Engine:** Vanilla JavaScript (ES6+).
+* **Ícones:** [Lucide Icons](https://lucide.dev/).
+* **Persistência:** LocalStorage (Os dados permanecem no navegador após o fechamento).
 
-Executive Presentation: A dedicated view for high-level reporting to stakeholders.
+## 📂 Estrutura do Projeto
 
-Multi-View Tracking: Includes Kanban boards, Sprints management, and Gantt Charts (Linha do Tempo) for chronological planning.
-
-Squad Filtering: Ability to filter data by specific squads or view the entire organization at once.
-
-📸 Interface Preview
-The UI utilizes a modern Dark Mode to reduce eye strain for managers monitoring data throughout the day:
-
-Project Cards: Display total progress (e.g., "75%"), pending work ("25% missing"), number of contributors, and deadlines.
-
-Navigation Sidebar: Quick access to Goals Management, Workload, and Timeline views.
-
-Real-time Status: Visual indicators for project categories like "Operations" or "Development".
-
-🛠️ Technical Overview
-Role: Full-stack Project Management Tool.
-
-Goal: Internal operational excellence and transparency.
-
-Security: Anonymized data for public deployment.
-
-🚀 How to Use (Template)
-Clone the repository: git clone https://github.com/enoGuarana/projectMonitor27
-
-Install dependencies: npm install (or your specific package manager).
-
-Configure Environment: Set up your internal API endpoints or local database.
-
-Run: npm start
+```text
+├── index.html          # Estrutura principal e pontos de montagem
+├── css/
+│   └── style.css       # Design System Premium (Dark Mode)
+└── js/
+    ├── renderers.js    # Motor de renderização das 5 visões
+    └── app.js          # Lógica de negócio, persistência e eventos
