@@ -1,142 +1,144 @@
-import { store } from './store.js';
-import { renderMacroView } from './views/macro.js';
-import { renderWorkloadView } from './views/workload.js';
-import { renderGanttView } from './views/gantt.js';
-import { renderApresentacaoView } from './views/apresentacao.js';
-import { renderKanbanView } from './views/kanban.js';
-import { renderSprintsView } from './views/sprints.js';
-import { renderManagementView } from './views/management.js';
-import { renderProjectDetail, removePhase, addPhase, openEditPhaseModal, toggleTaskStatus, deleteTask, openEditTaskModal, openAddTaskModal, addMember, removeMember, removeDelivery, openEditProjectModal } from './views/projectDetail.js';
-import { showModal, hideModal, renderAddProjectForm, handleAddProject } from './components/modal.js';
+// 1. ESTADO E PERSISTÊNCIA
+let projects = JSON.parse(localStorage.getItem('cgdin_db')) || [];
 
-// DOM Elements
-const contentArea = document.getElementById('content-area');
-const viewTitle = document.getElementById('view-title');
-const filterContainer = document.getElementById('filter-container');
-const squadSelect = document.getElementById('squad-filter');
-const modalContainer = document.getElementById('modal-container');
-const closeModalBtn = document.querySelector('.close-modal');
-
-// --- Bind globally necessary functions ---
-window.renderView = renderView;
-window.appRenderDetail = (id) => {
-    const p = store.getProjectById(id);
-    if (p) {
-        renderProjectDetail(p, viewTitle, contentArea);
-    }
+const save = () => {
+    localStorage.setItem('cgdin_db', JSON.stringify(projects));
 };
 
-window.handleAddProject = handleAddProject;
-
-// Project detail actions bound to window for inline onclick HTML execution
-window.removePhase = removePhase;
-window.addPhase = addPhase;
-window.openEditPhaseModal = openEditPhaseModal;
-window.toggleTaskStatus = toggleTaskStatus;
-window.deleteTask = deleteTask;
-window.openEditTaskModal = openEditTaskModal;
-window.openAddTaskModal = openAddTaskModal;
-window.addMember = addMember;
-window.removeMember = removeMember;
-window.removeDelivery = removeDelivery;
-window.openEditProjectModal = openEditProjectModal;
-window.deleteProjectFromModal = (pid) => {
-    if (confirm('Excluir projeto?')) {
-        store.deleteProject(pid);
-        renderView('macro');
-        hideModal();
-    }
-};
-// ------------------------------------------
-
-// Initialize App
-function init() {
-    setupEventListeners();
-    renderView(store.getCurrentView());
-}
-
-function setupEventListeners() {
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const view = item.getAttribute('data-view');
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            item.classList.add('active');
-            store.setView(view);
-            renderView(view);
-        });
+// 2. NAVEGAÇÃO
+window.renderView = function(view) {
+    const content = document.getElementById('content-area');
+    const titles = { 
+        macro: "Dashboard Executivo CGDIN", 
+        monitor: "Monitor Operacional", 
+        workload: "Carga de Trabalho", 
+        kanban: "Quadro Kanban", 
+        timeline: "Linha do Tempo de Ocupação" 
+    };
+    
+    document.getElementById('view-title').textContent = titles[view] || "Monitor CGDIN";
+    
+    document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('active');
+        if(n.dataset.view === view) n.classList.add('active');
     });
 
-    if (squadSelect) {
-        squadSelect.addEventListener('change', (e) => {
-            store.setSquadFilter(e.target.value);
-            renderView(store.getCurrentView());
-        });
+    content.innerHTML = window.Renderers[view](projects);
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
+    if(window.lucide) lucide.createIcons();
+};
+
+// 3. MODAIS
+window.showModal = (title, content) => {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-content').innerHTML = content;
+    document.getElementById('modal-container').classList.remove('hidden');
+};
+
+window.hideModal = () => {
+    document.getElementById('modal-container').classList.add('hidden');
+};
+
+// 4. CRIAÇÃO DE PROJETOS
+window.openProjectModal = () => {
+    window.showModal("Novo Projeto Estratégico", `
+        <form onsubmit="window.handleCreateProject(event)">
+            <label>Nome do Projeto</label>
+            <input type="text" id="p-name" placeholder="Ex: Monitoramento CGDIN" required>
+            <label>Prazo de Entrega</label>
+            <input type="date" id="p-deadline" required>
+            <button class="btn btn-primary" type="submit" style="width:100%">Criar Projeto</button>
+        </form>`);
+};
+
+window.handleCreateProject = (e) => {
+    e.preventDefault();
+    const name = document.getElementById('p-name').value;
+    const deadline = document.getElementById('p-deadline').value;
+    
+    projects.push({
+        id: Date.now(),
+        name,
+        deadline,
+        members: [],
+        tasks: []
+    });
+    
+    save();
+    window.hideModal();
+    window.renderView('macro');
+};
+
+window.deleteProject = (id) => {
+    if(confirm("Deseja realmente excluir o projeto?")) {
+        projects = projects.filter(p => p.id !== id);
+        save();
+        window.renderView('macro');
     }
+};
 
-    const addProjectBtn = document.getElementById('add-project-btn');
-    if (addProjectBtn) {
-        addProjectBtn.addEventListener('click', () => {
-            showModal('Novo Projeto', renderAddProjectForm());
-        });
-    }
+// 5. GESTÃO DE TAREFAS
+window.openTaskModal = (pid) => {
+    window.showModal("Adicionar Tarefa ao Projeto", `
+        <form onsubmit="window.handleAddTask(event, ${pid})">
+            <label>Descrição da Task</label>
+            <input type="text" id="t-name" placeholder="O que precisa ser feito?" required>
+            <label>Responsável</label>
+            <input type="text" id="t-user" placeholder="Nome do integrante" required>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
+                <div><label>Início</label><input type="date" id="t-start" required></div>
+                <div><label>Fim</label><input type="date" id="t-end" required></div>
+            </div>
+            <button class="btn btn-primary" type="submit" style="width:100%">Salvar Tarefa</button>
+        </form>`);
+};
 
-    if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', hideModal);
-    }
+window.handleAddTask = (e, pid) => {
+    e.preventDefault();
+    const p = projects.find(x => x.id === pid);
+    const user = document.getElementById('t-user').value;
 
-    if (modalContainer) {
-        modalContainer.addEventListener('click', (e) => {
-            if (e.target === modalContainer) hideModal();
-        });
-    }
-}
+    p.tasks.push({
+        id: Date.now(),
+        name: document.getElementById('t-name').value,
+        assignedTo: user,
+        start: document.getElementById('t-start').value,
+        end: document.getElementById('t-end').value,
+        status: 'Pendente',
+        completed: false
+    });
 
-function renderView(view) {
-    store.setView(view);
+    if(!p.members.includes(user)) p.members.push(user);
+    
+    save();
+    window.hideModal();
+    window.renderView('monitor');
+};
 
-    if (['macro', 'apresentacao', 'gestao', 'kanban'].includes(view)) {
-        filterContainer.classList.remove('hidden');
-    } else {
-        filterContainer.classList.add('hidden');
-    }
+window.toggleTask = (pid, tid) => {
+    const p = projects.find(x => x.id === pid);
+    const t = p.tasks.find(x => x.id === tid);
+    t.completed = !t.completed;
+    t.status = t.completed ? 'Concluído' : 'Em execução';
+    save();
+    window.renderView('monitor');
+};
 
-    const filteredProjects = store.getFilteredProjects();
+window.deleteTask = (pid, tid) => {
+    const p = projects.find(x => x.id === pid);
+    p.tasks = p.tasks.filter(x => x.id !== tid);
+    save();
+    window.renderView('monitor');
+};
 
-    switch (view) {
-        case 'macro':
-            viewTitle.textContent = 'Monitor de Projetos';
-            renderMacroView(filteredProjects, contentArea);
-            break;
-        case 'apresentacao':
-            viewTitle.textContent = 'Apresentação Executiva';
-            renderApresentacaoView(filteredProjects, contentArea);
-            break;
-        case 'kanban':
-            viewTitle.textContent = 'Kanban por Tarefas';
-            renderKanbanView(filteredProjects, contentArea);
-            break;
-        case 'workload':
-            viewTitle.textContent = 'Carga de Trabalho (Workload)';
-            renderWorkloadView(contentArea);
-            break;
-        case 'sprints':
-            viewTitle.textContent = 'Sprints Ativas';
-            renderSprintsView(filteredProjects, contentArea);
-            break;
-        case 'gantt':
-            viewTitle.textContent = 'Linha do Tempo (Gantt)';
-            renderGanttView(filteredProjects, contentArea);
-            break;
-        case 'gestao':
-            viewTitle.textContent = 'Gestão de Metas';
-            renderManagementView(filteredProjects, contentArea);
-            break;
-    }
+// 6. INICIALIZAÇÃO
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.nav-item').forEach(i => {
+        i.onclick = () => window.renderView(i.dataset.view);
+    });
 
-    if (window.lucide) {
-        window.lucide.createIcons();
-    }
-}
+    const addBtn = document.getElementById('add-project-btn');
+    if(addBtn) addBtn.onclick = () => window.openProjectModal();
 
-// Start Application
-document.addEventListener('DOMContentLoaded', init);
+    window.renderView('macro');
+});
